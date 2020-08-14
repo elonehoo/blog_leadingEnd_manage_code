@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+	<link rel="stylesheet" href="layui/css/layui.css" />
+	<head>
+		<meta charset="utf-8">
+		<title>管理留言</title>
+	</head>
+	
+	<body>
+		<div id="app">
+			<div class="layui-row">
+				<div class="layui-col-md9" style="margin-left: 200px">
+					<table class="layui-table">
+					<colgroup>
+						<col width="230px">
+						<col width="230px">
+						<col width="350px">
+						<col>
+					</colgroup>
+					<thead>
+					<tr>
+						<th>留言昵称</th>
+						<th>留言邮箱</th>
+						<th>留言内容</th>
+						<th>操作</th>
+					</tr>
+					</thead>
+					<tbody>
+						<tr v-for="item in items">
+							<td>{{item.messageNickname}}</td>
+							<td>{{item.messageEmail}}</td>
+							<td>{{item.messageContent}}</td>
+							<td>
+								<button @click.prevent="del(item.messageId)" type="button" class="layui-btn layui-btn-radius layui-btn-normal">
+									<i class="layui-icon">&#xe640;</i>删除
+								</button>
+							</td>
+						</tr>
+					</tbody>
+					</table>
+				</div>	
+				<div id="test1" style="margin-left: 500px;"></div>
+		</div>
+		</div>
+	</body>
+	
+	<script src="layui/layui.all.js" type="module"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script>
+		var app = new Vue({
+			el:"#app",
+			data:{
+				items:[],
+				pagintotal:"",
+				pagination:1,
+			},
+			created() {
+				this.show()
+			},
+			methods:{
+				show(){
+					axios.post('http://localhost:8080/message/page', {
+						pageNum:1
+					})
+					.then(function (response) {
+						console.log(response.data.information);
+						app.pagintotal = response.data.information.total
+						app.items = response.data.information.records
+						app.$nextTick(function () {
+							app.paging();
+						}) 
+					})
+					.catch(function (error) {
+						console.log(error);
+					}); 
+				},
+				paging(){
+					layui.use('laypage', function(){
+						var laypage = layui.laypage;
+					
+						//执行一个laypage实例
+						laypage.render({
+						  elem: 'test1'
+						  ,count: app.pagintotal//数据总数，从服务端得到
+						  ,limit:10
+						  ,jump: function(obj, first){
+						    //obj包含了当前分页的所有参数，比如：
+						    // console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
+						    // console.log(obj.limit); //得到每页显示的条数
+						    app.pagination = obj.curr
+						    //首次不执行
+						    if(!first){
+						      //do something
+							  app.pag();
+						    }
+						  }
+						});
+					});
+				},
+				pag(){
+					axios.post('http://localhost:8080/message/page', {
+						pageNum:app.pagination
+					})
+					.then(function (response) {
+						console.log(response.data.information);
+						app.pagintotal = response.data.information.total
+						app.items = response.data.information.records
+					})
+					.catch(function (error) {
+						console.log(error);
+					}); 
+				},
+				del(number){
+					axios.post('http://localhost:8080/message/delete', {
+						messageId:number
+					})
+					.then(function (response) {
+						console.log(response.data.information);
+						app.pag();
+					})
+					.catch(function (error) {
+						console.log(error);
+					}); 
+				}
+			}
+		})
+	</script>
+</html>

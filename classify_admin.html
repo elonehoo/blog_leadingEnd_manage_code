@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<!--	<link rel="stylesheet" href="layui/css/layui.css" />-->
+	<link rel="stylesheet" type="text/css" href="layui/css/layui.css">
+	<head>
+		<meta charset="utf-8">
+		<title>添加分类</title>
+	</head>
+	<body>
+		
+		<div id="app">
+			<div class="layui-row">
+				<div class="layui-col-md9" style="margin-left: 200px">
+					<table class="layui-table">
+						<colgroup>
+							<col width="100px">
+							<col width="100px">
+							<col>
+						</colgroup>
+						<thead>
+						<tr>
+							<th>博客类型名</th>
+							<th>操作</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td>
+								<div class="layui-form-item">
+									<label class="layui-form-label">类型名</label>
+									<div class="layui-input-block">
+										<input v-model="typeName" type="text" name="title" required  lay-verify="required" placeholder="请输入类型" autocomplete="off" class="layui-input">
+									</div>
+								</div>
+							</td>
+							<td>
+								<button @click.prevent="add()" type="button" class="layui-btn layui-btn-radius">
+									<i class="layui-icon">&#xe605;</i>添加
+								</button>
+								<button @click.prevent="closeone()" type="button" class="layui-btn layui-btn-radius layui-btn-normal">
+									<i class="layui-icon">&#x1006;</i>清空
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<div class="layui-form-item">
+									<label class="layui-form-label">类型名</label>
+									<div class="layui-input-block">
+										<input v-model="lists.typeName" type="text" name="title" required  lay-verify="required" placeholder="请输入类型" autocomplete="off" class="layui-input">
+									</div>
+								</div>
+							</td>
+							<td>
+								<button @click.prevent="twoupd(lists.typeId)" type="button" class="layui-btn layui-btn-radius">
+									<i class="layui-icon">&#xe642;</i>修改
+								</button>
+								<button @click.prevent="closetwo()" type="button" class="layui-btn layui-btn-radius layui-btn-normal">
+									<i class="layui-icon">&#xe640;</i>清空
+								</button>
+							</td>
+						</tr>
+						<tr v-for="item in items">
+							<td>{{item.typeName}}</td>
+							<td>
+								<button  @click.prevent="oneupd(item.typeId)" type="button" class="layui-btn layui-btn-radius">
+									<i class="layui-icon">&#xe642;</i>修改
+								</button>
+								<button @click.prevent="del(item.typeId)" type="button" class="layui-btn layui-btn-radius layui-btn-normal">
+									<i class="layui-icon">&#xe640;</i>删除
+								</button>
+							</td>
+						</tr>
+						</tbody>
+					</table>
+					<div id="test1" style="margin-left: 500px;"></div>
+				</div>
+				
+			</div>
+		</div>
+		
+	</body>
+	
+	<script src="layui/layui.all.js" type="module"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	
+	<script>
+		var app = new Vue({
+			el:"#app",
+			data:{
+				typeName:"",
+				pagination:"1",
+				pagintotal:"",
+				items:[],
+				lists:[]
+			},
+			created(){
+				this.show();
+			},
+			methods:{
+				show(){
+					axios.post('http://localhost:8080/type/paging', {
+						pageNum:1
+					})
+					.then(function (response) {
+						console.log(response.data.information);
+						app.pagintotal = response.data.information.total
+						app.items = response.data.information.records
+						app.$nextTick(function () {
+							app.paging();
+						}) 
+					})
+					.catch(function (error) {
+						console.log(error);
+					}); 
+				},
+				add(){
+					axios.post('http://localhost:8080/type/insert', {
+						typeName:app.typeName
+					})
+					.then(function (response) {
+						console.log(response.data);
+						app.pag();
+					})
+					.catch(function (error) {
+						console.log(error);
+					});
+				},
+				paging(){
+					layui.use('laypage', function(){
+						var laypage = layui.laypage;
+					
+						//执行一个laypage实例
+						laypage.render({
+						  elem: 'test1'
+						  ,count: app.pagintotal//数据总数，从服务端得到
+						  ,limit:5
+						  ,jump: function(obj, first){
+						    //obj包含了当前分页的所有参数，比如：
+						    // console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
+						    // console.log(obj.limit); //得到每页显示的条数
+						    app.pagination = obj.curr
+						    //首次不执行
+						    if(!first){
+						      //do something
+							  app.pag();
+						    }
+						  }
+						});
+					});
+				},
+				pag(){
+					axios.post('http://localhost:8080/type/paging', {
+						pageNum:app.pagination
+					})
+					.then(function (response) {
+						console.log(response.data.information);
+						app.pagintotal = response.data.information.total
+						app.items = response.data.information.records
+					})
+					.catch(function (error) {
+						console.log(error);
+					}); 
+				},
+				oneupd(number){
+					axios.post('http://localhost:8080/type/search', {
+						typeId:number
+					})
+					.then(function (response) {
+						app.lists = response.data.information
+					})
+					.catch(function (error) {
+						console.log(error);
+					});
+				},
+				del(number){
+					axios.post('http://localhost:8080/type/del', {
+						typeId:number
+					})
+					.then(function (response) {
+						console.log(response.data);
+						app.pag();
+					})
+					.catch(function (error) {
+						console.log(error);
+					});
+				},
+				twoupd(number){
+					axios.post('http://localhost:8080/type/update', {
+						typeId:number,
+						typeName:app.lists.typeName
+					})
+					.then(function (response) {
+						console.log(response.data);
+						app.pag();
+					})
+					.catch(function (error) {
+						console.log(error);
+					});
+				},
+				closeone(){
+					app.typeName = "";
+				},
+				closetwo(){
+					app.lists = [];
+				},
+			}
+		})
+	</script>
+</html>

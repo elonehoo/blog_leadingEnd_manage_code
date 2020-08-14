@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+	<link rel="stylesheet" type="text/css" href="layui/css/layui.css" />
+
+	<head>
+		<meta charset="utf-8">
+		<title>信息管理</title>
+	</head>
+	<body style="background-color: #f2f2f2;">
+		
+		<div id="app" class="layui-container" >
+			<div class="layui-row">
+			    <div class="layui-row" style="margin-top: 100px;">
+						
+					  <!-- 开始 -->
+			          <div class="layui-form-item">
+			            <label class="layui-form-label">昵称</label>
+			            <div class="layui-input-block">
+			              <input v-model="items.userNickname" type="text" class="layui-input" />
+			            </div>
+			          </div>
+					  <!-- 结束 -->
+					  <!-- 开始 -->
+					  <div class="layui-form-item">
+					    <label class="layui-form-label">名字</label>
+					    <div class="layui-input-block">
+					      <input v-model="items.userName" type="text" class="layui-input" />
+					    </div>
+					  </div>
+					  <!-- 结束 -->
+					  <!-- 开始 -->
+					  <div class="layui-form-item">
+					    <label class="layui-form-label">账号</label>
+					    <div class="layui-input-block">
+					      <input v-model="items.userEmail" type="text" class="layui-input" />
+					    </div>
+					  </div>
+					  <!-- 结束 -->
+					  <!-- 开始 -->
+					  <div class="layui-form-item">
+					    <label class="layui-form-label">密码</label>
+					    <div class="layui-input-block">
+					      <input v-model="items.userPassword" type="text" class="layui-input" />
+					    </div>
+					  </div>
+					  <!-- 结束 -->
+					  <div class="layui-form-item" style="margin-left: 400px;">
+					      <div class="layui-input-block">
+					        <button @click.prevent="upd()" class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+					      </div>
+					    </div>
+			        </div>
+			    </div>    
+		</div>
+		
+	</body>
+	<script src="layui/layui.all.js" type="module"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script >
+		export default{
+			name:"#app",
+			method(){
+				layui.use('form', function(){
+				  var form = layui.form;
+				  
+				});
+			},
+		};
+	</script>
+	<script>
+		var app = new Vue({
+			el:"#app",
+			data:{
+				items:[]
+			},
+			created() {
+				this.show()
+			},
+			methods:{
+				show(){
+					var message = localStorage.getItem("token");
+					
+						axios.post('http://localhost:8080/user/logIn', {
+							token:message,
+						})
+						.then(function (response) {
+							console.log(response.data);
+							if(response.data.code == 104){
+								location.href="index_admin.html"
+							}else{
+								app.items = response.data.information 
+							}
+						})
+						.catch(function (error) {
+							console.log(error);
+						});
+					
+				},
+				upd(){
+					var message = localStorage.getItem("token");
+					axios.post('http://localhost:8080/user/alter', {
+						token:message,
+						uuid:app.items.userId,
+						nickname:app.items.userNickname,
+						name:app.items.userName,
+						email:app.items.userEmail,
+						password:app.items.userPassword
+					})
+					.then(function (response) {
+						console.log(response.data);
+						
+						
+					})
+					.catch(function (error) {
+						console.log(error);
+					});
+				}
+			}
+		})
+	</script>
+</html>

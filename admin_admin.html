@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+	<!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+	<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
+	<link rel="stylesheet" href="layui/css/layui.css" />
+	<head>
+		<meta charset="utf-8">
+		<title>后端管理</title>
+	</head>
+	<body>
+		<div id="app">
+			<!-- <img :src="portrait" /> -->
+			<div id="example" class="layui-layout layui-layout-admin" >
+			  <div class="layui-header">
+			    <div class="layui-logo">博客后端</div>
+			    <!-- 头部区域（可配合layui已有的水平导航） -->
+			    
+			    <ul class="layui-nav layui-layout-right">
+			      <li class="layui-nav-item">
+			        <a href="javascript:;">
+			          <img :src="items.userHeadPortrait" class="layui-nav-img">
+			          {{items.userNickname}}
+			        </a>
+			      </li>
+			      <li class="layui-nav-item">
+					  <a href="">
+						  <i class="layui-icon">&#xe682;</i>退出
+					  </a>
+				  </li>
+			    </ul>
+			  </div>
+			  
+			  <div class="layui-side layui-bg-black">
+			      <div class="layui-side-scroll">
+			        <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+			        <ul class="layui-nav layui-nav-tree"  lay-filter="filter">
+			          <li class="layui-nav-item layui-nav-itemed">
+			            <a class="" href="javascript:;">{{items.userName}}</a>
+			            <dl class="layui-nav-child">
+			              <dd class="layui-this"><a href="regulator_admin.html" target="iframeMain">博客管理</a></dd>
+			              <dd><a href="management_blog_admin.html" target="iframeMain">添加博客</a></dd>
+			              <dd><a href="classify_admin.html" target="iframeMain">添加分类</a></dd>
+			              <dd><a href="information_admin.html" target="iframeMain">修改信息</a></dd>
+			              <dd><a href="message_admin.html" target="iframeMain">管理留言</a></dd>
+			            </dl>
+			          </li>
+			          
+			      </div>
+			    </div>
+			    
+			    <div class="layui-body">
+			      <!-- 内容主体区域 -->
+			      <!-- <div style="padding: 15px;">内容主体区域</div> -->
+				  <iframe src="regulator_admin.html" frameborder="0" class="layadmin-iframe" name="iframeMain" style="width: 100%; height:100%;"></iframe>
+			    </div>
+			    
+			    <div class="layui-footer">
+			      <!-- 底部固定区域 -->
+			      {{items.userNickname}}
+			    </div>
+			</div>
+		</div>
+	</body>
+	
+	<script src="layui/layui.all.js" type="module"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script >
+		export default{
+			name:"#example",
+			method(){
+				layui.use('element', function(){
+				  var element = layui.element;
+				  element.on('nav(filter)', function(elem){
+				    console.log(elem); //得到当前点击的DOM对象
+				  });
+				});
+			},
+		};
+	</script>
+	<script>
+		
+		var app = new Vue({
+			el:"#app",
+			data:{
+				items:[],
+				
+				
+			},
+			created() {
+				this.show();
+				
+			},
+			methods:{
+				show(){
+					//从浏览器（客户端）中取出Token
+					var message = localStorage.getItem("token");
+					axios.post('http://localhost:8080/user/logIn', {
+						token:message
+					})
+					.then(function (response) {
+						console.log(response.data);
+						if(response.data.code == 104){
+							location.href="index_admin.html"
+						}else{
+							app.items = response.data.information 
+						}
+					})
+					.catch(function (error) {
+						console.log(error);
+					});	
+					
+				},
+			},
+		})
+	</script>
+</html>

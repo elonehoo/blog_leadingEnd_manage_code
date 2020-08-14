@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+	<link rel="stylesheet" href="layui/css/layui.css" />
+	<!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+	<head>
+		<meta charset="utf-8">
+		<title>管理博客</title>
+	</head>
+	<body>
+		
+		<div id="app">
+			<div class="layui-container" style="margin-top: 10px; margin-left: 300px;">  
+			  <div class="layui-row">
+			    <div class="layui-col-md9">
+			      	<div class="layui-form-item">
+						<label class="layui-form-label">属性</label>
+			      	    <div class="layui-input-inline">
+							<select  v-model="property" class="form-control">
+							  <option value=""></option>
+							  <option  value="原创" >原创</option>
+							  <option  value="搬运" >搬运</option>
+							  <option  value="翻译" >翻译</option>
+							</select>
+			      	    </div>
+						<label class="layui-form-label">类别</label>
+						<div class="layui-input-inline">
+							<select v-model="classty" class="form-control">
+								<option value=""></option>
+								<option  v-for="item in items" :value="item.typeId">{{item.typeName}}</option>
+							</select>
+						</div>
+<!--						-->
+						<button type="button" class="layui-btn" id="test1">
+						  <i class="layui-icon">&#xe67c;</i>上传图片
+						</button>
+			      	  </div>
+					  <div class="layui-input-inline" style="width: 570px; margin-left: 40px;">
+					  	<input v-model="headline" type="text" name="title" required  lay-verify="required" placeholder="请输入标题" autocomplete="off" class="layui-input">
+					  </div>
+						
+						<div id="editor" style="margin-top: 10px;">
+						  <textarea  id="mytextarea"></textarea>
+						</div>
+						<!-- tinyMCE.activeEditor.getContent() -->
+						<div style=" margin-left: 25%; margin-top: 20px;">
+							<button @click="cancel()"  type="button" class="layui-btn layui-btn-lg layui-btn-radius layui-btn-primary">
+								<i class="layui-icon">&#xe640;</i> 取消
+							</button>
+							<button @click="preserve()" type="button" class="layui-btn layui-btn-lg layui-btn-radius">
+								<i class="layui-icon">&#xe654;</i> 保存
+							</button>
+							<button @click="issue()" type="button" class="layui-btn layui-btn-lg layui-btn-radius layui-btn-normal">
+								<i class="layui-icon">&#xe66d;</i> 发布
+							</button>
+						</div>
+			    </div>
+			  </div>
+			</div>
+		</div>
+	</body>
+	<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+
+	<script>
+		tinymce.init({
+		    selector: '#mytextarea',
+			language: 'zh_CN',
+			height:400
+		});
+	</script>
+	<script src="layui/layui.all.js" type="module"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	
+	<script>
+	
+		let app = new Vue({
+			el:"#app",
+			data:{
+				property:"",
+				classty:"",
+				headline:"",
+				contents:"",
+				items:[],
+				images:"",
+
+			},
+			created() {
+				this.show();
+			},
+			
+			methods:{
+				show(){
+					axios.post('http://localhost:8080/type/classifier', {
+						
+					})
+					.then(function (response) {
+						console.log(response.data.information);
+						app.items = response.data.information
+						app.$nextTick(function(){
+							this.upload();
+						})
+					})
+					.catch(function (error) {
+						console.log(error);
+					}); 
+					
+				},
+				cancel(){
+					app.property = "";
+					app.classty = "";
+					app.headline="";
+					app.classty = "";
+					tinyMCE.activeEditor.setContent("");
+				},
+				/*hh(){
+					// app.contents = tinyMCE.activeEditor.getContent()
+					// layer.msg("上传失败")
+					/!* var activeEditor = tinymce.activeEditor;
+					
+					var editBody = activeEditor.getBody();
+					
+					activeEditor.selection.select(editBody);
+					
+					var text = activeEditor.selection.getContent( { ‘format’ : ‘text’ } );
+					 *!/
+					var test = tinyMCE.activeEditor.getContent()
+					console.log(test)
+					var activeEditor = tinymce.activeEditor;
+					
+					var editBody = activeEditor.getBody();
+					
+					activeEditor.selection.select(editBody);
+					
+					var text = activeEditor.selection.getContent( { "format": "text" } );
+					console.log(text.substr(0,2))
+				},*/
+				issue(){
+					//上传
+					var issue = "true";
+					//内容
+					app.contents = tinyMCE.activeEditor.getContent();
+					//描述
+					var activeEditor = tinymce.activeEditor;
+					var editBody = activeEditor.getBody();
+					activeEditor.selection.select(editBody);
+					var text = activeEditor.selection.getContent( { "format": "text" } );
+					var describe = text.substr(0,10);
+					//获取登录的用户信息
+					var message = localStorage.getItem("token");
+					
+					axios.post('http://localhost:8080/blog/insert', {
+						image:app.images,
+						contents:app.contents,
+						headline:app.headline,
+						property:app.property,
+						classty:app.classty,
+						publish:issue,
+						describe:describe,
+						token:message
+					})
+					.then(function (response) {
+						console.log(response.data);
+						
+					})
+					.catch(function (error) {
+						console.log(error);
+					}); 
+				},
+				preserve(){
+					//上传
+					var issue = "false";
+					//内容
+					app.contents = tinyMCE.activeEditor.getContent();
+					//描述
+					var activeEditor = tinymce.activeEditor;
+					var editBody = activeEditor.getBody();
+					activeEditor.selection.select(editBody);
+					var text = activeEditor.selection.getContent( { "format": "text" } );
+					var describe = text.substr(0,10);
+					//获取登录的用户信息
+					var message = localStorage.getItem("token");
+
+					axios.post('http://localhost:8080/blog/insert', {
+						image:app.images,
+						contents:app.contents,
+						headline:app.headline,
+						property:app.property,
+						classty:app.classty,
+						publish:issue,
+						describe:describe,
+						token:message
+					})
+					.then(function (response) {
+						console.log(response.data);
+					})
+					.catch(function (error) {
+						console.log(error);
+					});
+				},
+				upload(){
+					layui.use('upload', function(){
+					  var upload = layui.upload;
+					   
+					  //执行实例
+					  var uploadInst = upload.render({
+					    elem: '#test1' //绑定元素
+					    ,url: 'http://localhost:8080/blog/picture' //上传接口
+					    ,done: function(res){
+					      //上传完毕回调
+						  console.log(res)
+						  app.images = res.information
+					    }
+					    ,error: function(res){
+					      //请求异常回调
+						  layui.msg(res)
+					    }
+					  });
+					});
+				},
+			}
+		})
+	</script>
+</html>
